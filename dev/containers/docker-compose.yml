@@ -1,15 +1,14 @@
 # -- DEV DOCKER-COMPOSE --
 # -- DO NOT USE IN PRODUCTION! --
 
-version: "3"
 services:
   db:
     container_name: wiki-db
     image: postgres:15-alpine
     environment:
-      POSTGRES_DB: wiki
-      POSTGRES_PASSWORD: wikijsrocks
-      POSTGRES_USER: wikijs
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_USER: ${DB_USER}
     logging:
       driver: "none"
     volumes:
@@ -44,16 +43,33 @@ services:
     build:
       context: ../..
       dockerfile: dev/containers/Dockerfile
+    env_file:
+      - .env
     depends_on:
       - db
-    ports:
-      - "3000:3000"
+#    uncomment the lines above if you don't use the proxy in https://github.com/LuisMeirelles/proxy
+#    ports:
+#      - "3000:3000"
+    labels:
+        traefik.enable: "true"
+        traefik.http.routers.wiki.entrypoints: "websecure"
+        traefik.http.routers.wiki.rule: "Host(`${APP_URL}`)"
+        traefik.http.services.wiki.loadbalancer.server.port: 3000
+        traefik.http.routers.wiki.tls: "true"
+    networks:
+        - proxy
+        - default
     volumes:
       - ../..:/wiki
-      - /wiki/node_modules
+      - ../../node_modules:/wiki/node_modules
       - /wiki/.git
-
+    command: ["yarn", 'dev']
 
 volumes:
   db-data:
   # solr-data:
+
+networks:
+    proxy:
+        external: true
+

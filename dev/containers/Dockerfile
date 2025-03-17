@@ -2,7 +2,7 @@
 # -- DO NOT USE IN PRODUCTION! --
 
 FROM node:18
-LABEL maintainer "requarks.io"
+MAINTAINER "requarks.io"
 
 RUN apt-get update && \
     apt-get install -y bash curl git python3 make g++ nano openssh-server gnupg && \
